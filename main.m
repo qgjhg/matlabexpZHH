@@ -136,52 +136,78 @@ try
         
 %% 鼠标设置===================================================================
     HideCursor;                                                            %隐藏鼠标
-
-%% 随机化试次=================================================================
-    condition={'11','12','21','22'};                                       %1=X线索,2=S线索;1=检测形状，2=检测颜色（11,22=线索有效，12,21=线索无效）
-    newcondition='';
-    for i=1:9                                                              %1-9:l1-l3,r1-r3,y1-y3
-        for j=1:4
-            newcondition=[newcondition,{[num2str(i),condition{j}]}];
-        end
-    end
-    condition=newcondition;
-    newcondition='';
-    timepoints=floor((endtime-starttime+deltatime)/deltatime);             %时间点数
-    for i=1:timepoints                                                     %01-40:时间点
-        for j=1:36
-            if(i<10) 
-                fujia=['0',num2str(i)];
-            else
-                fujia=num2str(i);
-            end
-            newcondition=[newcondition,{[condition{j},fujia]}];
-        end
-    end
-    rng(sum(clock*100));                                                   %重要，必须在
-    temp=randperm(length(newcondition));
-    newcondition(1,:)=newcondition(1,temp);
-    rng(sum(clock*100));
-    temp=randperm(length(newcondition));
-    newcondition(1,:)=newcondition(1,temp);                                %重复两次随机以增强随机性
-    trialindex=newcondition;
-
-    shunxu={'1','2'};                                                      %1=目标在左,2=目标在右
-    shunxu = repmat(shunxu,1,9*2*timepoints);
-    temp=randperm(length(shunxu));
-    shunxu(1,:)=shunxu(1,temp);
-    temp=randperm(length(shunxu));
-    shunxu(1,:)=shunxu(1,temp);
-    objposIndex=shunxu;                                                    %目标呈现位置
-
-%% 输出文件===================================================================
-    if exist(['results/' subId '-' subName '-' subGender '.txt'],'file')==0      %检测文件是否存在，如存在则输出到_wrong，避免数据丢失
-        fid=fopen(['results/' subId '-' subName '-' subGender '.txt'],'w');
-    else
-        fid=fopen(['results/' subId '-' subName '-' subGender '_wrong.txt'],'w');
-    end
-    fprintf(fid,'%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\r\n','Sub','Name','Gender','trial','rememberNum','rememberObj','cue','testtype','cuepos','SOA','response','responsetime','testnum','numresponse','numresponsetime');
   
+%% 输出文件===================================================================
+    %iscontinue记录是否是继续试验,0=否1=是
+    if exist(['results/' subId '-' subName '-' subGender '.txt'],'file')==0      %检测文件是否存在，如存在则表明是继续试验，不再输入表头
+        fid=fopen(['results/' subId '-' subName '-' subGender '.txt'],'w');
+        fprintf(fid,'%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\r\n','Sub','Name','Gender','trial','rememberNum','rememberObj','cue','testtype','cuepos','SOA','response','responsetime','testnum','numresponse','numresponsetime');
+        iscontinue=0;
+        startline=1;                                                       %设定开始试次
+        fidresourcew=fopen(['resource/' subId '-' subName '-' subGender '.txt'],'w');%记录参数文件
+    else
+        fidr = fopen(['results/' subId '-' subName '-' subGender '.txt']);
+        lines = 0;
+        while ~feof(fidr)
+            fgetl(fidr);
+            lines = lines +1;
+        end
+        fclose(fidr);
+        startline=lines;                                                   %计算之前已经进行过的试次数,从下一试次开始（lines-1+1）。
+        fid=fopen(['results/' subId '-' subName '-' subGender '.txt'],'a');
+        iscontinue=1;
+    end
+    
+%% 随机化试次=================================================================
+    if(iscontinue==1)                                                      %是继续试验
+        [trialindexread,objposIndexread]=textread(['resource/' subId '-' subName '-' subGender '.txt'],'%s %s'); %读取参数
+        trialindex=trialindexread';                                        %转置
+        objposIndex=objposIndexread';
+    else                                                                   %否继续试验
+        condition={'11','12','21','22'};                                       %1=X线索,2=S线索;1=检测形状，2=检测颜色（11,22=线索有效，12,21=线索无效）
+        newcondition='';
+        for i=1:9                                                              %1-9:l1-l3,r1-r3,y1-y3
+            for j=1:4
+                newcondition=[newcondition,{[num2str(i),condition{j}]}];
+            end
+        end
+        condition=newcondition;
+        newcondition='';
+        timepoints=floor((endtime-starttime+deltatime)/deltatime);             %时间点数
+        for i=1:timepoints                                                     %01-40:时间点
+            for j=1:36
+                if(i<10) 
+                    fujia=['0',num2str(i)];
+                else
+                    fujia=num2str(i);
+                end
+                newcondition=[newcondition,{[condition{j},fujia]}];
+            end
+        end
+        rng(sum(clock*100));                                                   %重要，必须在
+        temp=randperm(length(newcondition));
+        newcondition(1,:)=newcondition(1,temp);
+        rng(sum(clock*100));
+        temp=randperm(length(newcondition));
+        newcondition(1,:)=newcondition(1,temp);                                %重复两次随机以增强随机性
+        trialindex=newcondition;
+
+        shunxu={'1','2'};                                                      %1=目标在左,2=目标在右
+        shunxu = repmat(shunxu,1,9*2*timepoints);
+        temp=randperm(length(shunxu));
+        shunxu(1,:)=shunxu(1,temp);
+        temp=randperm(length(shunxu));
+        shunxu(1,:)=shunxu(1,temp);
+        objposIndex=shunxu;                                                    %目标呈现位置
+        
+        outputresource=[trialindex',objposIndex'];
+        
+        for i=1:length(outputresource)
+            fprintf(fidresourcew,'%s\t%s\r\n',outputresource{i,1},outputresource{i,2});
+        end
+        fclose(fidresourcew);
+    end
+    
 %% 屏幕呈现===================================================================
     Screen('TextSize', w, 30);                                             %设置字号
     Screen('Flip',w);
@@ -199,7 +225,7 @@ try
                                                                            %实验开始
     Screen('Flip',w);
     KbWait;
-    for trial=1:ttimes
+    for trial=startline:ttimes
         rng(sum(100*clock));                                               %随机种子
         numberindex=randperm(9);
         number1=numberindex(1);                                            %随机取得复述数字
@@ -300,7 +326,7 @@ try
                     response_value='F';
                 elseif(keycode(escapekey))
                     fclose(fid);
-                    Screen('Close',wi);
+                    Screen('Close',w);
                     clear all;
                     return;
                 end
@@ -338,7 +364,7 @@ try
                     numresponse_value='F';
                 elseif(keycode(escapekey))
                     fclose(fid);
-                    Screen('Close',wi);
+                    Screen('Close',w);
                     clear all;
                     return;
                 end
