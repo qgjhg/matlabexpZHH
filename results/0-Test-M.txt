@@ -1,0 +1,5 @@
+Sub	Name	Gender	trial	rememberNum	rememberObj	cue	testtype	cuepos	SOA	response	responsetime	testnum	numresponse	numresponsetime
+0	Test	M	1	2,3	y3	S	X	right	0.260	J	0.697	1	J	0.029
+0	Test	M	2	3,9	y1	X	S	left	0.420	F	0.095	3	F	0.071
+0	Test	M	3	6,1	r1	S	X	right	0.400	F	0.044	6	F	0.073
+0	Test	M	4	1,8	y1	S	S	right	0.320	J	0.012	7	J	0.052
